@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yalla Habibi Salon - Modern Elegance & Bespoke Beauty</title>
+
+    <script src="https://cdn.tailwindcss.com"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js" defer></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js" defer></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/ScrollTrigger.min.js" defer></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" /> <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @layer base {
+            html {
+                @apply scroll-smooth;
+            }
+            body {
+                @apply bg-cream text-text-dark font-sans antialiased;
+                /* Base font size for better scaling */
+                font-size: 16px; /* Adjust as needed */
+            }
+            h1, h2, h3, h4, h5, h6 {
+                @apply font-serif text-text-heading;
+            }
+            /* Custom scrollbar (optional, webkit only) */
+            ::-webkit-scrollbar {
+                width: 8px;
+            }
+            ::-webkit-scrollbar-track {
+                background: theme('colors.cream');
+            }
+            ::-webkit-scrollbar-thumb {
+                background-color: theme('colors.accent.DEFAULT');
+                border-radius: 10px;
+                border: 2px solid theme('colors.cream');
+            }
+        }
+        @layer components {
+            /* Custom button styles */
+            .btn {
+                @apply inline-block px-6 py-3 rounded-full text-base font-medium transition-all duration-300 ease-in-out shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2;
+            }
+            .btn-primary {
+                @apply bg-accent text-white hover:bg-accent-dark focus:ring-accent;
+            }
+            .btn-secondary {
+                @apply bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-white focus:ring-accent;
+            }
+            .section-padding {
+                 @apply py-20 md:py-28 lg:py-32;
+            }
+            /* Card style example */
+            .content-card {
+                 @apply bg-white p-6 md:p-8 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100;
+            }
+            /* Subtle underline effect for nav links */
+            .nav-link {
+                @apply relative py-2 text-text-heading hover:text-accent transition-colors duration-300;
+            }
+            .nav-link::after {
+                content: '';
+                @apply absolute bottom-0 left-0 w-0 h-[2px] bg-accent transition-all duration-300;
+            }
+            .nav-link:hover::after {
+                @apply w-full;
+            }
+        }
+    </style>
+
+    <script>
+        // Tailwind Configuration
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cream': '#FDF8F0', // Light creamy background
+                        'accent': {
+                           DEFAULT: '#C89F91', // Muted Rose Gold / Copper
+                           dark: '#A17C70' // Darker shade
+                        },
+                        'text': {
+                            dark: '#4A4A4A', // Dark gray for body text
+                            heading: '#2D2D2D', // Very dark gray for headings
+                            light: '#7A7A7A' // Lighter gray for secondary text
+                        },
+                        'highlight': '#EAE0D5', // Subtle highlight background
+                        'secondary': '#70A19F', // Muted Teal/Green secondary accent
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'serif': ['Playfair Display', 'serif'],
+                    },
+                    transitionTimingFunction: {
+                       'out-expo': 'cubic-bezier(0.19, 1, 0.22, 1)',
+                    },
+                    // Add custom animations if needed
+                    keyframes: {
+                       fadeInUp: {
+                           '0%': { opacity: '0', transform: 'translateY(20px)' },
+                           '100%': { opacity: '1', transform: 'translateY(0)' },
+                       },
+                    },
+                    animation: {
+                       fadeInUp: 'fadeInUp 0.6s ease-out forwards',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #FDF8F0; /* cream */
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.7s ease-out;
+        }
+        #preloader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #p5-preloader-container {
+            width: 100px; /* Adjust size */
+            height: 100px;
+        }
+        /* Hide scrollbar while preloader is active */
+        body.loading {
+            overflow: hidden;
+        }
+    </style>
+
+</head>
+<body class="loading">
+
+    <div id="preloader">
+        <div id="p5-preloader-container"></div>
+        <noscript>Loading...</noscript>
+    </div>
+
+    <header id="main-header" class="fixed top-0 left-0 w-full z-50 transition-all duration-300 py-4">
+         <div class="container mx-auto px-6 flex justify-between items-center">
+            <a href="#hero" class="text-2xl font-serif font-bold text-text-heading hover:text-accent transition-colors duration-300">
+                Yalla Habibi Salon
+            </a>
+            <nav class="hidden md:flex space-x-8">
+                <a href="#about" class="nav-link">About</a>
+                <a href="#services" class="nav-link">Services</a>
+                <a href="#process" class="nav-link">Our Process</a>
+                <a href="#philosophy" class="nav-link">Philosophy</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </nav>
+             <button id="mobile-menu-button" class="md:hidden text-2xl text-text-heading z-50">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+     <div id="mobile-menu" class="fixed top-0 left-0 w-full h-screen bg-cream/95 backdrop-blur-md z-40 flex flex-col items-center justify-center space-y-8 text-2xl transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden">
+        <a href="#about" class="nav-link mobile-nav-link">About</a>
+        <a href="#services" class="nav-link mobile-nav-link">Services</a>
+        <a href="#process" class="nav-link mobile-nav-link">Our Process</a>
+        <a href="#philosophy" class="nav-link mobile-nav-link">Philosophy</a>
+        <a href="#contact" class="nav-link mobile-nav-link">Contact</a>
+        <a href="tel:+94123456789" class="btn btn-primary mt-6">Book Now</a>
+    </div>
+
+
+    <main>
+        <section id="hero" class="relative h-screen flex items-center justify-center text-center text-white overflow-hidden">
+            <div id="three-hero-canvas" class="absolute top-0 left-0 w-full h-full z-0"></div>
+
+            <div class="absolute top-0 left-0 w-full h-full bg-black/30 z-10"></div>
+
+            <div class="relative z-20 px-6 animate-fadeInUp">
+                <h1 class="text-5xl md:text-7xl lg:text-8xl font-serif font-bold mb-4 text-shadow-lg">
+                    Yalla Habibi Salon
+                </h1>
+                <p class="text-xl md:text-2xl font-sans font-light mb-8 max-w-3xl mx-auto text-shadow">
+                    Where artistry meets tranquility. Discover bespoke beauty experiences tailored just for you.
+                </p>
+                <a href="#contact" class="btn btn-primary text-lg">
+                   Schedule Your Escape <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+
+             <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 animate-bounce">
+                <a href="#about" aria-label="Scroll down">
+                    <i class="fas fa-chevron-down text-white text-2xl"></i>
+                </a>
+            </div>
+        </section>
+
+        <section id="about" class="section-padding bg-white">
+            <div class="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="gsap-reveal">
+                    <h2 class="text-4xl md:text-5xl font-serif mb-6 text-text-heading">A Sanctuary of Style</h2>
+                    <p class="text-lg text-text-dark mb-4 leading-relaxed">
+                        Welcome to Yalla Habibi Salon, Anuradhapura's premier destination for sophisticated beauty and relaxation. Our name, meaning "Let's go, my dear," embodies our philosophy: guiding you warmly on your personal journey to radiance.
+                    </p>
+                    <p class="text-lg text-text-dark mb-6 leading-relaxed">
+                        Founded with a passion for exquisite craftsmanship and genuine client care, we offer a serene escape from the everyday. Our space is meticulously designed for your comfort, blending modern elegance with a welcoming Sri Lankan spirit.
+                    </p>
+                     <a href="#philosophy" class="btn btn-secondary">Our Philosophy</a>
+                </div>
+                <div class="relative h-64 md:h-96 lg:h-auto lg:min-h-[400px] rounded-lg overflow-hidden gsap-reveal bg-highlight">
+                    <div id="p5-about-visual" class="absolute inset-0 z-0 opacity-70"></div>
+                     <div class="absolute inset-0 z-10 flex items-center justify-center p-8">
+                         <p class="text-2xl italic text-accent text-center font-serif">"Beauty begins the moment you decide to be yourself."</p>
+                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="services" class="section-padding bg-cream">
+            <div class="container mx-auto px-6">
+                <h2 class="text-4xl md:text-5xl font-serif mb-16 text-center text-text-heading gsap-reveal">Bespoke Treatments</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+                    <div class="content-card gsap-reveal">
+                        <div class="text-4xl text-accent mb-4"><i class="fas fa-cut"></i></div>
+                        <h3 class="text-2xl font-semibold mb-3 text-text-heading">Hair Couture</h3>
+                        <p class="text-text-dark mb-4">Precision cuts, transformative color, revitalizing treatments, and elegant styling designed to enhance your unique beauty.</p>
+                        <ul class="text-text-light space-y-1 list-disc list-inside">
+                            <li>Custom Cuts & Styling</li>
+                            <li>Advanced Colouring</li>
+                            <li>Keratin & Smoothing</li>
+                            <li>Bridal & Event Hair</li>
+                        </ul>
+                    </div>
+                     <div class="content-card gsap-reveal" data-gsap-delay="0.1">
+                         <div class="text-4xl text-secondary mb-4"><i class="fas fa-hand-sparkles"></i></div>
+                        <h3 class="text-2xl font-semibold mb-3 text-text-heading">Nail Artistry</h3>
+                        <p class="text-text-dark mb-4">Impeccable manicures, pedicures, and nail enhancements using premium products for lasting beauty and health.</p>
+                        <ul class="text-text-light space-y-1 list-disc list-inside">
+                            <li>Spa Manicures & Pedicures</li>
+                            <li>Gel Polish Application</li>
+                            <li>Nail Enhancements</li>
+                            <li>Creative Nail Art</li>
+                        </ul>
+                    </div>
+                     <div class="content-card gsap-reveal" data-gsap-delay="0.2">
+                         <div class="text-4xl text-accent mb-4"><i class="fas fa-spa"></i></div>
+                        <h3 class="text-2xl font-semibold mb-3 text-text-heading">Skin Rituals</h3>
+                        <p class="text-text-dark mb-4">Personalized facials and skin treatments targeting your specific concerns, leaving your skin radiant and refreshed.</p>
+                        <ul class="text-text-light space-y-1 list-disc list-inside">
+                            <li>Customized Facials</li>
+                            <li>Gentle Hair Removal (Waxing/Threading)</li>
+                            <li>Lash & Brow Tinting</li>
+                            <li>Professional Makeup</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="process" class="section-padding bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="text-4xl md:text-5xl font-serif mb-16 text-center text-text-heading gsap-reveal">Your Journey With Us</h2>
+                <div class="relative">
+                    <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-accent/30 transform -translate-x-1/2"></div>
+
+                    <div class="space-y-16 md:space-y-0 md:grid md:grid-cols-3 md:gap-12 relative">
+                        <div class="text-center md:text-left gsap-reveal">
+                            <div class="flex justify-center md:justify-start items-center mb-4">
+                               <div class="w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center text-xl font-bold mr-4 relative z-10">1</div>
+                                <h3 class="text-2xl font-semibold text-text-heading">Consultation</h3>
+                            </div>
+                            <p class="text-text-dark leading-relaxed px-4 md:px-0">We begin with a thoughtful conversation to understand your desires, assess your needs, and recommend the perfect treatments.</p>
+                        </div>
+                        <div class="text-center md:text-center gsap-reveal" data-gsap-delay="0.1">
+                           <div class="flex justify-center items-center mb-4">
+                               <div class="w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center text-xl font-bold mr-4 relative z-10">2</div>
+                                <h3 class="text-2xl font-semibold text-text-heading">Personalized Service</h3>
+                            </div>
+                            <p class="text-text-dark leading-relaxed px-4 md:px-0">Relax and enjoy as our skilled experts perform your chosen services with meticulous care and premium products.</p>
+                        </div>
+                        <div class="text-center md:text-right gsap-reveal" data-gsap-delay="0.2">
+                             <div class="flex justify-center md:justify-end items-center mb-4">
+                                 <h3 class="text-2xl font-semibold text-text-heading mr-4 md:order-2">Radiant Results</h3>
+                               <div class="w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center text-xl font-bold relative z-10 md:order-1">3</div>
+                            </div>
+                            <p class="text-text-dark leading-relaxed px-4 md:px-0">Leave feeling refreshed, confident, and beautiful, equipped with advice on how to maintain your stunning new look.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="philosophy" class="section-padding bg-highlight relative overflow-hidden">
+             <div id="p5-philosophy-bg" class="absolute inset-0 z-0 opacity-20"></div>
+            <div class="container mx-auto px-6 relative z-10">
+                <h2 class="text-4xl md:text-5xl font-serif mb-12 text-center text-text-heading gsap-reveal">Our Core Beliefs</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+                     <div class="text-center p-6 gsap-reveal">
+                        <div class="text-5xl text-accent mb-4"><i class="fas fa-hand-holding-heart"></i></div>
+                        <h3 class="text-2xl font-semibold mb-2 text-text-heading">Genuine Care</h3>
+                        <p class="text-text-dark leading-relaxed">We treat every client like family, ensuring a warm, welcoming, and comfortable experience from start to finish.</p>
+                    </div>
+                     <div class="text-center p-6 gsap-reveal" data-gsap-delay="0.1">
+                        <div class="text-5xl text-secondary mb-4"><i class="fas fa-gem"></i></div>
+                        <h3 class="text-2xl font-semibold mb-2 text-text-heading">Uncompromising Quality</h3>
+                        <p class="text-text-dark leading-relaxed">We use only the finest products and techniques, delivered by highly trained professionals dedicated to excellence.</p>
+                    </div>
+                     <div class="text-center p-6 gsap-reveal" data-gsap-delay="0.2">
+                         <div class="text-5xl text-accent mb-4"><i class="fas fa-leaf"></i></div>
+                        <h3 class="text-2xl font-semibold mb-2 text-text-heading">Holistic Wellbeing</h3>
+                        <p class="text-text-dark leading-relaxed">Beauty is more than skin deep. We foster a tranquil environment that nurtures both your outer radiance and inner peace.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+         <section id="testimonials" class="section-padding bg-white">
+            <div class="container mx-auto px-6">
+                 <h2 class="text-4xl md:text-5xl font-serif mb-16 text-center text-text-heading gsap-reveal">Kind Words</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <blockquote class="content-card border-l-4 border-accent gsap-reveal">
+                        <p class="text-lg italic text-text-dark mb-4 leading-relaxed">"Absolutely the best salon experience in Anuradhapura! The attention to detail is incredible, and the atmosphere is so calming. I left feeling like a new person."</p>
+                        <cite class="block font-semibold text-text-heading not-italic">— Anusha P.</cite>
+                    </blockquote>
+                    <blockquote class="content-card border-l-4 border-secondary gsap-reveal" data-gsap-delay="0.1">
+                        <p class="text-lg italic text-text-dark mb-4 leading-relaxed">"Yalla Habibi isn't just a salon, it's an escape. The team is so talented and friendly. My hair has never looked better. Highly recommended!"</p>
+                        <cite class="block font-semibold text-text-heading not-italic">— Rohan S.</cite>
+                    </blockquote>
+                 </div>
+            </div>
+        </section>
+
+        <section id="contact" class="section-padding bg-cream">
+             <div class="container mx-auto px-6">
+                <h2 class="text-4xl md:text-5xl font-serif mb-16 text-center text-text-heading gsap-reveal">Get In Touch</h2>
+                 <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white p-8 md:p-12 rounded-lg shadow-xl border border-gray-100">
+                     <div class="space-y-6 gsap-reveal">
+                         <h3 class="text-3xl font-serif text-text-heading mb-6">Visit Us or Call</h3>
+                         <div class="flex items-start text-text-dark">
+                            <i class="fas fa-map-marker-alt mt-1 mr-4 text-accent text-xl w-5 text-center"></i>
+                            <span>123 Beauty Street,<br>Anuradhapura, North Central Province,<br>Sri Lanka</span>
+                        </div>
+                        <div class="flex items-center text-text-dark">
+                           <i class="fas fa-phone-alt mr-4 text-accent text-xl w-5 text-center"></i>
+                            <a href="tel:+94123456789" class="hover:text-accent transition-colors">+94 (12) 345-6789</a>
+                        </div>
+                         <div class="flex items-center text-text-dark">
+                           <i class="fas fa-envelope mr-4 text-accent text-xl w-5 text-center"></i>
+                           <a href="mailto:hello@yallahabibisalon.lk" class="hover:text-accent transition-colors">hello@yallahabibisalon.lk</a>
+                        </div>
+                         <div class="flex items-start text-text-dark">
+                           <i class="fas fa-clock mt-1 mr-4 text-accent text-xl w-5 text-center"></i>
+                           <span>
+                               <strong>Mon - Sat:</strong> 9:00 AM - 7:00 PM<br>
+                               <strong>Sunday:</strong> Closed (By appointment only for special services)
+                           </span>
+                        </div>
+                    </div>
+                     <div class="space-y-6 gsap-reveal flex flex-col justify-center" data-gsap-delay="0.1">
+                        <h3 class="text-3xl font-serif text-text-heading mb-6">Ready for Radiance?</h3>
+                         <p class="text-lg text-text-dark leading-relaxed">
+                           We invite you to experience the unique blend of artistry and tranquility at Yalla Habibi Salon. Call us today to schedule your personalized consultation and treatment.
+                         </p>
+                         <p class="text-text-dark">
+                             Appointments are recommended to ensure dedicated time with our specialists.
+                         </p>
+                        <div class="mt-4">
+                            <a href="tel:+94123456789" class="btn btn-primary">
+                                <i class="fas fa-phone-alt mr-2"></i> Book by Phone
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+     <footer class="bg-text-heading text-cream py-12">
+        <div class="container mx-auto px-6 text-center">
+            <p class="font-serif text-3xl mb-4">Yalla Habibi Salon</p>
+             <div class="flex justify-center space-x-6 mb-6 text-2xl">
+                <a href="#" aria-label="Facebook" class="hover:text-accent transition-colors"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Instagram" class="hover:text-accent transition-colors"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="WhatsApp" class="hover:text-accent transition-colors"><i class="fab fa-whatsapp"></i></a>
+            </div>
+            <p class="text-sm text-cream/70">
+                &copy; <span id="current-year"></span> Yalla Habibi Salon. All Rights Reserved. <br>
+                123 Beauty Street, Anuradhapura, Sri Lanka. <br>
+                 Modern Web Experience Crafted with <i class="fas fa-heart text-accent"></i>.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Preloader ---
+            const preloader = document.getElementById('preloader');
+            const body = document.body;
+
+            // p5.js sketch for preloader
+            const preloaderSketch = (p) => {
+                let angle = 0;
+                let diameter = 80; // Base diameter
+                let numCircles = 5;
+                let speed = 0.05;
+
+                p.setup = () => {
+                    let canvas = p.createCanvas(100, 100); // Match container size
+                     canvas.parent('p5-preloader-container');
+                     p.noFill();
+                     p.strokeWeight(3);
+                };
+
+                p.draw = () => {
+                    p.clear(); // Use clear() instead of background for transparency if needed later
+                     p.translate(p.width / 2, p.height / 2);
+
+                    for (let i = 0; i < numCircles; i++) {
+                         let offsetAngle = (p.TWO_PI / numCircles) * i;
+                         let currentDiameter = diameter * (0.5 + 0.5 * p.sin(angle + offsetAngle * 2));
+                         let R = p.map(p.sin(angle + offsetAngle), -1, 1, 150, 200); // C89F91 approx R value
+                         let G = p.map(p.cos(angle + offsetAngle), -1, 1, 124, 159); // C89F91 approx G value
+                         let B = p.map(p.sin(angle + offsetAngle), -1, 1, 112, 145); // C89F91 approx B value
+                         p.stroke(R, G, B);
+                        p.ellipse(0, 0, currentDiameter * 0.8, currentDiameter * 0.8); // Slightly smaller ellipse
+                    }
+                    angle += speed;
+                };
+            };
+
+            if (typeof p5 !== 'undefined') {
+                new p5(preloaderSketch);
+            } else {
+                 console.warn("p5.js not loaded, preloader animation unavailable.");
+                 // You might want to hide the container if p5 fails
+                 document.getElementById('p5-preloader-container').style.display = 'none';
+            }
+
+            // Hide preloader after a delay (or use window.onload)
+             window.addEventListener('load', () => {
+                setTimeout(() => {
+                    preloader.classList.add('hidden');
+                    body.classList.remove('loading');
+                    // Initialize animations after preloader fades
+                    initGSAPAnimations();
+                 }, 500); // Give fade out time
+             });
+
+
+            // --- Smooth Scrolling ---
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (href.length > 1) { // Ensure it's not just "#"
+                        e.preventDefault();
+                        const targetId = href.substring(1);
+                        const targetElement = document.getElementById(targetId);
+                        const header = document.getElementById('main-header');
+                        const headerOffset = header ? header.offsetHeight : 0;
+                         const mobileMenu = document.getElementById('mobile-menu');
+
+                        if (targetElement) {
+                            const elementPosition = targetElement.getBoundingClientRect().top;
+                            const offsetPosition = elementPosition + window.pageYOffset - headerOffset - 15; // Adjust buffer
+
+                            window.scrollTo({
+                                top: offsetPosition,
+                                behavior: 'smooth'
+                            });
+
+                             // Close mobile menu if open
+                            if (mobileMenu && mobileMenu.classList.contains('menu-open')) {
+                                toggleMobileMenu(); // Reuse toggle function
+                            }
+                        }
+                    }
+                });
+            });
+
+             // --- Sticky Header Background ---
+             const header = document.getElementById('main-header');
+             const scrollTriggerPoint = 50; // Pixels scrolled before changing header
+
+             window.addEventListener('scroll', () => {
+                 if (window.scrollY > scrollTriggerPoint) {
+                     header.classList.add('bg-cream/95', 'shadow-md', 'py-3');
+                     header.classList.remove('py-4');
+                 } else {
+                     header.classList.remove('bg-cream/95', 'shadow-md');
+                     header.classList.add('py-4');
+                      header.classList.remove('py-3');
+                 }
+             }, { passive: true }); // Improve scroll performance
+
+              // --- Mobile Menu Toggle ---
+             const mobileMenuButton = document.getElementById('mobile-menu-button');
+             const mobileMenu = document.getElementById('mobile-menu');
+             const menuIcon = mobileMenuButton.querySelector('i');
+
+             const toggleMobileMenu = () => {
+                const isOpen = mobileMenu.classList.toggle('menu-open');
+                 mobileMenu.classList.toggle('-translate-x-full');
+                 menuIcon.classList.toggle('fa-bars');
+                 menuIcon.classList.toggle('fa-times');
+                 body.classList.toggle('overflow-hidden'); // Prevent scrolling when menu is open
+             }
+
+             if (mobileMenuButton && mobileMenu) {
+                 mobileMenuButton.addEventListener('click', toggleMobileMenu);
+
+                 // Add listeners to links inside mobile menu to close it on click
+                 mobileMenu.querySelectorAll('.mobile-nav-link').forEach(link => {
+                    link.addEventListener('click', toggleMobileMenu);
+                 });
+             }
+
+
+            // --- GSAP Animations (Initialize after preloader) ---
+             const initGSAPAnimations = () => {
+                if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+                     gsap.registerPlugin(ScrollTrigger);
+
+                     // General fade-in reveal for elements with class 'gsap-reveal'
+                     gsap.utils.toArray('.gsap-reveal').forEach((elem) => {
+                        const delay = parseFloat(elem.getAttribute('data-gsap-delay') || 0);
+                        gsap.fromTo(elem,
+                            { opacity: 0, y: 50 },
+                            {
+                                opacity: 1,
+                                y: 0,
+                                duration: 0.8,
+                                delay: delay,
+                                ease: 'power3.out',
+                                scrollTrigger: {
+                                    trigger: elem,
+                                    start: 'top 85%', // Trigger when 85% of the element is visible
+                                    // markers: true, // Uncomment for debugging
+                                    toggleActions: 'play none none none' // Play animation once on enter
+                                }
+                            }
+                        );
+                    });
+
+                     // Maybe a specific animation for the hero text elements
+                     gsap.from("#hero h1", { duration: 1, y: 30, opacity: 0, delay: 0.5, ease: 'power3.out' });
+                     gsap.from("#hero p", { duration: 1, y: 30, opacity: 0, delay: 0.7, ease: 'power3.out' });
+                     gsap.from("#hero .btn", { duration: 1, y: 30, opacity: 0, delay: 0.9, ease: 'power3.out' });
+                     gsap.from("#hero .fa-chevron-down", { duration: 1.5, y: -20, opacity: 0, delay: 1.5, ease: 'power3.out' });
+
+
+                } else {
+                     console.warn("GSAP or ScrollTrigger not loaded, animations disabled.");
+                }
+             };
+
+
+            // --- Three.js Hero Background ---
+            const initThreeJS = () => {
+                 if (typeof THREE === 'undefined') {
+                     console.warn("Three.js not loaded, hero background disabled.");
+                     return;
+                 }
+
+                const container = document.getElementById('three-hero-canvas');
+                if (!container) return;
+
+                let scene, camera, renderer, mesh;
+                let mouseX = 0, mouseY = 0;
+                 const windowHalfX = window.innerWidth / 2;
+                 const windowHalfY = window.innerHeight / 2;
+
+                 // Scene
+                 scene = new THREE.Scene();
+                 // scene.fog = new THREE.FogExp2(0x2D2D2D, 0.05); // Subtle fog
+
+                 // Camera
+                 camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+                 camera.position.z = 10; // Adjusted Z position
+
+                 // Geometry & Material
+                 const geometry = new THREE.TorusKnotGeometry(2.5, 0.6, 100, 16); // Smoother Torus Knot
+                 // Use MeshStandardMaterial for realistic lighting
+                 const material = new THREE.MeshStandardMaterial({
+                     color: 0xC89F91, // Accent color
+                     metalness: 0.6, // More metallic
+                     roughness: 0.3, // Less rough, more reflective
+                      // wireframe: true // Uncomment for wireframe style
+                 });
+                 mesh = new THREE.Mesh(geometry, material);
+                 scene.add(mesh);
+
+                 // Lighting
+                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Softer ambient
+                 scene.add(ambientLight);
+
+                 const pointLight = new THREE.PointLight(0xffffff, 0.8, 100);
+                 pointLight.position.set(5, 5, 5);
+                 scene.add(pointLight);
+
+                  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+                  directionalLight.position.set(-5, 3, 5);
+                  scene.add(directionalLight);
+
+
+                 // Renderer
+                 renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // Alpha true for transparent bg
+                 renderer.setSize(window.innerWidth, window.innerHeight);
+                 renderer.setPixelRatio(window.devicePixelRatio); // Adjust for screen density
+                 container.appendChild(renderer.domElement);
+
+                 // Mouse Interaction Listener
+                 document.addEventListener('mousemove', onDocumentMouseMove, false);
+
+                 // Resize Listener
+                 window.addEventListener('resize', onWindowResize, false);
+
+                 // Animation Loop
+                 function animate() {
+                     requestAnimationFrame(animate);
+
+                     // Subtle rotation based on mouse position
+                     mesh.rotation.x += ( (mouseY * 0.5) - mesh.rotation.x ) * 0.01;
+                     mesh.rotation.y += ( (mouseX * 0.5) - mesh.rotation.y ) * 0.01;
+
+                     // Slow constant rotation
+                     // mesh.rotation.x += 0.001;
+                     // mesh.rotation.y += 0.002;
+
+                     renderer.render(scene, camera);
+                 }
+
+                 function onWindowResize() {
+                     camera.aspect = window.innerWidth / window.innerHeight;
+                     camera.updateProjectionMatrix();
+                     renderer.setSize(window.innerWidth, window.innerHeight);
+                 }
+
+                 function onDocumentMouseMove(event) {
+                     mouseX = ( event.clientX - windowHalfX ) / windowHalfX;
+                     mouseY = ( event.clientY - windowHalfY ) / windowHalfY;
+                 }
+
+                 animate();
+             };
+
+            initThreeJS();
+
+
+             // --- p5.js Visuals (Beyond Preloader) ---
+             const initP5Visuals = () => {
+                if (typeof p5 === 'undefined') {
+                    console.warn("p5.js not loaded, additional visuals disabled.");
+                    return;
+                }
+
+                 // Example: Subtle background for Philosophy section
+                 const philosophyBgSketch = (p) => {
+                     let particles = [];
+                     const numParticles = 50;
+
+                     class Particle {
+                         constructor() {
+                             this.pos = p.createVector(p.random(p.width), p.random(p.height));
+                             this.vel = p.createVector(p.random(-0.3, 0.3), p.random(-0.3, 0.3));
+                             this.size = p.random(1, 3);
+                             this.color = p.color(112, 161, 159, p.random(30, 80)); // secondary color with alpha
+                         }
+
+                         update() {
+                             this.pos.add(this.vel);
+                             this.edges();
+                         }
+
+                         show() {
+                             p.noStroke();
+                             p.fill(this.color);
+                             p.ellipse(this.pos.x, this.pos.y, this.size);
+                         }
+
+                          edges() {
+                              if (this.pos.x < 0 || this.pos.x > p.width) this.vel.x *= -1;
+                              if (this.pos.y < 0 || this.pos.y > p.height) this.vel.y *= -1;
+                          }
+                     }
+
+
+                     p.setup = () => {
+                         let container = document.getElementById('p5-philosophy-bg');
+                         let canvas = p.createCanvas(container.offsetWidth, container.offsetHeight);
+                         canvas.parent('p5-philosophy-bg');
+                         for(let i=0; i<numParticles; i++){
+                             particles.push(new Particle());
+                         }
+                     };
+
+                     p.draw = () => {
+                         p.clear(); // Clear background each frame
+                         for(let particle of particles){
+                             particle.update();
+                             particle.show();
+                         }
+                         // Connect nearby particles (optional performance hit)
+                         // connectParticles(particles, p);
+                     };
+
+                     p.windowResized = () => {
+                          let container = document.getElementById('p5-philosophy-bg');
+                          p.resizeCanvas(container.offsetWidth, container.offsetHeight);
+                     };
+                 };
+
+                  // Example: Subtle dots for About section placeholder
+                 const aboutVisualSketch = (p) => {
+                      let dots = [];
+                      const numDots = 30;
+                      let noiseScale = 0.01;
+
+                      p.setup = () => {
+                          let container = document.getElementById('p5-about-visual');
+                          let canvas = p.createCanvas(container.offsetWidth, container.offsetHeight);
+                          canvas.parent('p5-about-visual');
+                           p.noStroke();
+                           for(let i=0; i<numDots; i++){
+                               dots.push(p.createVector(p.random(p.width), p.random(p.height)));
+                           }
+                      };
+
+                      p.draw = () => {
+                          p.clear();
+                          p.fill(199, 159, 145, 100); // Accent color with alpha
+                          let time = p.millis() * 0.0001;
+
+                          for(let dot of dots){
+                              let noiseVal = p.noise(dot.x * noiseScale, dot.y * noiseScale, time);
+                               let size = p.map(noiseVal, 0, 1, 2, 6);
+                               let angle = p.map(noiseVal, 0, 1, 0, p.TWO_PI * 2);
+                               let xOffset = p.cos(angle) * 0.5;
+                               let yOffset = p.sin(angle) * 0.5;
+
+                              p.ellipse(dot.x + xOffset, dot.y + yOffset, size, size);
+                          }
+                      };
+
+                      p.windowResized = () => {
+                          let container = document.getElementById('p5-about-visual');
+                          p.resizeCanvas(container.offsetWidth, container.offsetHeight);
+                          // Regenerate dot positions on resize?
+                      };
+                 };
+
+                 // Initialize the sketches
+                 if (document.getElementById('p5-philosophy-bg')) {
+                     new p5(philosophyBgSketch);
+                 }
+                 if (document.getElementById('p5-about-visual')) {
+                     new p5(aboutVisualSketch);
+                 }
+
+             };
+
+             initP5Visuals();
+
+
+             // --- Footer Current Year ---
+             const yearSpan = document.getElementById('current-year');
+             if (yearSpan) {
+                 yearSpan.textContent = new Date().getFullYear();
+             }
+
+        }); // End DOMContentLoaded
+    </script>
+
+</body>
+</html>
